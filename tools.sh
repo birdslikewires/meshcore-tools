@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## meshcore-tools/tools.sh v1.02 (16th November 2025)
+## meshcore-tools/tools.sh v1.03 (16th November 2025)
 ##  Helpful things for MeshCore command line faffery.
 
 usage() {
@@ -42,6 +42,7 @@ mc() {
 loop() {
 
 	timeset
+	mc_channels=$(mc -j get_channels)
 
 	while true; do
 
@@ -57,6 +58,7 @@ loop() {
 
 			mc_user="null"
 			mc_channel_idx=$(echo "$mc_data" | jq -r '.channel_idx')
+			mc_channel_name=$(echo "$mc_channels" | jq -r --argjson idx "$mc_channel_idx" '.[] | select(.channel_idx == $idx) | .channel_name')
 			mc_hops=$(echo "$mc_data" | jq -r '.path_len')
 			mc_sent=$(echo "$mc_data" | jq -r '.sender_timestamp')
 			mc_text=$(echo "$mc_data" | jq -r '.text')
@@ -113,9 +115,10 @@ loop() {
 				--argjson dt "$delivered_time" \
 				--argjson jt "$journey_time" \
 				--argjson jh "$journey_hops" \
+				--arg chn "$mc_channel_name" \
 				--arg usr "$mc_user" \
 				--arg msg "$mc_text" \
-				'. + {user: $usr, msg: $msg, delivered_timestamp: $dt, journey_time: $jt, journey_hops: $jh}')
+				'. + {channel_name: $chn, user: $usr, msg: $msg, delivered_timestamp: $dt, journey_time: $jt, journey_hops: $jh}')
 
 			# Use the content of responses.sh to formulate the replies.
 			mc_reply=$(handle_responses "$mc_channel_idx" "$mc_text" "$mc_user" "$mc_name" "$mc_hopped")
