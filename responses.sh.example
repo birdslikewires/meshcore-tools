@@ -1,0 +1,36 @@
+# Response handling for different channels
+# Copy this to responses.sh and customize for your setup
+
+handle_responses() {
+
+	local mc_channel_idx="$1"
+	local mc_text="$2"
+	local mc_user="$3"
+	local mc_name="$4"
+	local mc_hopped="$5"
+	
+	mc_reply=""
+	case "$mc_channel_idx" in
+
+		"0")
+			## Public Channel
+			##  You really shouldn't have bot responses in here.
+		;;
+
+		"1")
+			## Channel Slot 1
+			if [[ "${mc_text,,}" == "!ping" ]]; then
+				mc_reply="@[$mc_user] pong!"
+			fi
+		;;
+
+		"null")
+			## Direct Messages
+			mc_reply=$(fit_reply "Rx '" "$mc_text" "'." 150)
+		;;
+
+	esac
+	
+	echo "$mc_reply"
+
+}

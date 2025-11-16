@@ -1,0 +1,11 @@
+mc_name=""
+mc_contacts_manual="true"
+mc_radio="869.618,62.5,8,8"
+mc_serial="/dev/tty.usbserial-0001"
+mc_transmit="n"
+mc_mqtt="n"
+
+mqtt_broker="192.168.1.1"
+mqtt_port="1883"
+mqtt_user="mqtt"
+mqtt_pass="mqtt"
