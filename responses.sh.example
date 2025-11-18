@@ -1,5 +1,5 @@
-# Response handling for different channels
-# Copy this to responses.sh and customize for your setup
+# Response Handling
+# Copy this to responses.sh and customize for your setup.
 
 handle_responses() {
 
@@ -19,6 +19,7 @@ handle_responses() {
 
 		"1")
 			## Channel Slot 1
+			##  Simple exact-match ping responder.
 			if [[ "${mc_text,,}" == "!ping" ]]; then
 				mc_reply="@[$mc_user] pong!"
 			fi
@@ -26,6 +27,7 @@ handle_responses() {
 
 		"null")
 			## Direct Messages
+			##  Reply back with the original message included.
 			mc_reply=$(fit_reply "Rx '" "$mc_text" "'." 150)
 		;;
 

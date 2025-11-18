@@ -36,7 +36,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/responses.sh"
 
 mc() {
-    meshcli -s "$mc_serial" "$@"
+	meshcli -s "$mc_serial" "$@"
 }
 
 loop() {
@@ -198,24 +198,113 @@ timeset() {
 
 fit_reply() {
 
-    local prefix="$1"
-    local text="$2"
-    local suffix="$3"
-    local max_length="$4"
-    
-    local overhead=$((${#prefix} + ${#suffix}))
-    local available=$((max_length - overhead))
-    
-    if [[ ${#text} -le $available ]]; then
-        echo "${prefix}${text}${suffix}"
-        return
-    fi
-    
-    # Show start and end with ... in middle
-    local keep=$((available / 2 - 2))
-    local start="${text:0:$keep}"
-    local end="${text: -$keep}"
-    echo "${prefix}${start} ... ${end}${suffix}"
+	local prefix="$1"
+	local text="$2"
+	local suffix="$3"
+	local max_length="$4"
+	
+	local overhead=$((${#prefix} + ${#suffix}))
+	local available=$((max_length - overhead))
+	
+	if [[ ${#text} -le $available ]]; then
+		echo "${prefix}${text}${suffix}"
+		return
+	fi
+	
+	# Show start and end with ... in middle
+	local keep=$((available / 2 - 2))
+	local start="${text:0:$keep}"
+	local end="${text: -$keep}"
+	echo "${prefix}${start} ... ${end}${suffix}"
+
+}
+
+
+ask_gemini() {
+
+	local message="$1"
+	local api_key="$2"
+	local max_chars="${3:-136}"
+	local max_tokens=2000
+	local max_retries=4
+	local retry_count=0
+	
+	# Build the request JSON.
+	local request=$(jq -n \
+		--arg msg "$message" \
+		--arg max_chars "$max_chars" \
+		--argjson max_tokens "$max_tokens" \
+		'{
+			"system_instruction": {
+				"parts": [
+					{
+						"text": "You are a one-shot chatbot, so your interaction with the sender of the message will be the only response you give to that person. Your responses are limited to \($max_chars) characters, so try to make them count! You are stateless, so never ask questions. "
+					}
+				]
+			},
+			"contents": [{
+				"parts": [{
+					"text": "\($msg)"
+				}]
+			}],
+			"generationConfig": {
+				"maxOutputTokens": $max_tokens,
+				"temperature": 1.4,
+				"thinkingConfig": {
+	 				"thinkingBudget": 0
+	  			}
+			}
+		}')
+	
+	#echo >&2
+	#echo "$request" | jq >&2
+
+	while [[ $retry_count -lt $max_retries ]]; do
+
+		# Make the call.
+		local response=$(curl -s -X POST \
+			"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent" \
+			-H "x-goog-api-key: $api_key" \
+			-H "Content-Type: application/json" \
+			-d "$request")
+		
+		#echo "$response" | jq >&2
+		#echo >&2
+
+		# Check for errors.
+		local error=$(echo "$response" | jq -r '.error.message // empty')
+		if [[ -n "$error" ]]; then
+			retry_count=$((retry_count + 1))
+			if [[ $retry_count -lt $max_retries ]]; then
+				echo "FAILED ($retry_count/$max_retries): $error" >&2
+				sleep 2
+				continue
+			else
+				echo "ERROR: $error (failed after $max_retries attempts)." >&2
+				return 1
+			fi
+		fi
+		
+		# Extract the text response.
+		local text=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text // empty' | sed 's/^[[:space:]]*//')
+		
+		if [[ -z "$text" ]]; then
+			retry_count=$((retry_count + 1))
+			if [[ $retry_count -lt $max_retries ]]; then
+				echo "FAILED ($retry_count/$max_retries): No response text." >&2
+				sleep 2
+				continue
+			else
+				echo "ERROR: No response text found (failed after $max_retries attempts)." >&2
+				return 1
+			fi
+		fi
+		
+		# Success!
+		echo "$text"
+		return 0
+
+	done
 
 }
 
