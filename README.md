@@ -108,7 +108,6 @@ All messages share a common set of fields:
 | `type` | Packet type name (e.g. `advert`, `message`, `ack`) |
 | `receivedTimestamp` | ISO timestamp from the gateway |
 | `receivedUnix` | Unix timestamp (seconds) |
-| `date`, `time` | Date and time strings from the gateway |
 | `packetHash` | Unique packet hash (used for deduplication) |
 | `path` | Array of path hop hashes |
 | `hops` | Number of hops |

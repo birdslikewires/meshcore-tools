@@ -177,19 +177,23 @@ def on_message(client, userdata, msg):
         payload_type = getattr(packet, 'payload_type', None)
         type_name = PAYLOAD_TYPE_NAMES.get(payload_type, 'unknown_{}'.format(payload_type))
 
+        def to_float(v):
+            try:
+                return float(v) if v is not None else None
+            except (ValueError, TypeError):
+                return None
+
         common = {
             'type':              type_name,
             'receivedTimestamp': data.get('timestamp'),
             'receivedUnix':      received_unix,
-            'date':              data.get('date'),
-            'time':              data.get('time'),
             'packetHash':        data['hash'],
             'path':              path,
             'hops':              hops,
             'pathHashBytes':     path_hash_bytes,
-            'snr':               data.get('SNR'),
-            'rssi':              data.get('RSSI'),
-            'score':             data.get('score'),
+            'snr':               to_float(data.get('SNR')),
+            'rssi':              to_float(data.get('RSSI')),
+            'score':             to_float(data.get('score')),
         }
 
         if isinstance(packet.payload, dict):
@@ -229,10 +233,11 @@ def on_message(client, userdata, msg):
             if channel_hash:
                 channel_hash = channel_hash.upper()
             channel = channel_names.get(channel_hash, 'unknown({})'.format(channel_hash))
-            decrypted = getattr(decoded, 'decrypted', None) or {}
-            sender    = decrypted.get('sender')
-            message   = decrypted.get('message')
-            sent_unix = decrypted.get('timestamp')
+            decrypted = getattr(decoded, 'decrypted', None)
+            decrypted_data = decrypted or {}
+            sender    = decrypted_data.get('sender')
+            message   = decrypted_data.get('message')
+            sent_unix = decrypted_data.get('timestamp')
             propagation = (received_unix - sent_unix) if (received_unix and sent_unix) else None
             out = dict(common)
             out.update({
