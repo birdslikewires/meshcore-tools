@@ -153,6 +153,12 @@ def publish(type_name, payload):
     output_client.publish('meshcore/{}'.format(type_name), json.dumps(payload, default=str), qos=0)
 
 
+def publish_advert(payload):
+    msg = json.dumps(payload, default=str)
+    output_client.publish('meshcore/advert', msg, qos=0)
+    output_client.publish('meshcore/advert/{}'.format(payload['publicKey']), msg, qos=0, retain=True)
+
+
 # --- Message handler ---
 def on_message(client, userdata, msg):
     if not msg.topic.endswith('/packets'):
@@ -224,7 +230,10 @@ def on_message(client, userdata, msg):
                 role_name = device_role.name if hasattr(device_role, 'name') else str(device_role)
                 out['deviceRole'] = role_value
                 out['deviceRoleName'] = role_name
-            publish('advert', out)
+            if out.get('publicKey'):
+                publish_advert(out)
+            else:
+                publish('advert', out)
             return
 
         # Group text
