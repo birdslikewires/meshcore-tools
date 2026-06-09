@@ -254,6 +254,15 @@ def on_message(client, userdata, msg):
             publish('group_text', out)
             return
 
+        # Encrypted direct message types we can't decrypt
+        ENCRYPTED_TYPES = {
+            PayloadType.TextMessage, PayloadType.Request,
+            PayloadType.Response, PayloadType.AnonRequest,
+        }
+        if payload_type in ENCRYPTED_TYPES:
+            publish(type_name, dict(common, decrypted=False))
+            return
+
         # Everything else
         publish(type_name, common)
 
