@@ -1,0 +1,18 @@
+[Unit]
+Description=MeshCore packet decoder MQTT bridge
+After=network.target mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/meshcore-tools
+EnvironmentFile=/opt/meshcore-tools/decoder.env
+ExecStart=/usr/bin/node /opt/meshcore-tools/decode.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

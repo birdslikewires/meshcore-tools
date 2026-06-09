@@ -1,0 +1,13 @@
+{
+  "name": "meshcore-tools",
+  "version": "1.0.0",
+  "description": "MeshCore packet decoder and MQTT bridge",
+  "main": "decode.js",
+  "scripts": {
+    "start": "node decode.js"
+  },
+  "dependencies": {
+    "@michaelhart/meshcore-decoder": "*",
+    "mqtt": "*"
+  }
+}
