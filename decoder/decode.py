@@ -41,14 +41,6 @@ channel_secrets = [
 key_store = MeshCoreKeyStore({'channel_secrets': channel_secrets})
 decode_options = DecryptionOptions(key_store=key_store)
 
-DEVICE_ROLES = {
-    0: 'client',
-    1: 'client_mute',
-    2: 'repeater',
-    3: 'room_server',
-    4: 'sensor',
-    5: 'kiss_modem',
-}
 
 PAYLOAD_TYPE_NAMES = {
     PayloadType.Request:     'request',
@@ -235,8 +227,10 @@ def on_message(client, userdata, msg):
                 out['lat'] = location.get('latitude')
                 out['lon'] = location.get('longitude')
             if device_role is not None:
-                out['deviceRole'] = device_role
-                out['deviceRoleName'] = DEVICE_ROLES.get(device_role, 'unknown({})'.format(device_role))
+                role_value = device_role.value if hasattr(device_role, 'value') else device_role
+                role_name = device_role.name if hasattr(device_role, 'name') else str(device_role)
+                out['deviceRole'] = role_value
+                out['deviceRoleName'] = role_name
             out['decoded'] = decoded_to_dict(decoded)
             publish('advert', out)
             return
