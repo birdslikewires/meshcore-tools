@@ -6,9 +6,9 @@ Wants=mosquitto.service
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/opt/meshcore-tools
-EnvironmentFile=/opt/meshcore-tools/decoder.env
-ExecStart=/usr/bin/python3 /opt/meshcore-tools/decode.py
+WorkingDirectory=/opt/meshcore-tools/decoder
+EnvironmentFile=/opt/meshcore-tools/decoder/decoder.env
+ExecStart=/opt/meshcore-tools/venv/bin/python /opt/meshcore-tools/decoder/decode.py
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal
