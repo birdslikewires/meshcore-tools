@@ -258,7 +258,7 @@ def on_message(client, userdata, msg):
             if message is not None:
                 out['message'] = message
             out['decoded'] = decoded_to_dict(decoded)
-            publish('message', out)
+            publish('group_text', out)
             return
 
         # Everything else

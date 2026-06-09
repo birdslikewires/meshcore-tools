@@ -122,4 +122,4 @@ Additional fields by type:
 
 **`meshcore/advert`** — `publicKey`, `signatureValid`, `name`, `lat`, `lon`, `deviceRole`, `deviceRoleName`
 
-**`meshcore/message`** — `channel`, `channelHash`, `sentUnix`, `propagationSecs`, `sender`, `message`
+**`meshcore/group_text`** — `channel`, `channelHash`, `sentUnix`, `propagationSecs`, `sender`, `message`
