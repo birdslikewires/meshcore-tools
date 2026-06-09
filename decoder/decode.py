@@ -123,15 +123,6 @@ def to_unix(timestamp_str):
         return None
 
 
-def decoded_to_dict(obj):
-    if obj is None:
-        return {}
-    if hasattr(obj, 'to_dict'):
-        return obj.to_dict()
-    if hasattr(obj, '__dict__'):
-        return vars(obj)
-    return {}
-
 
 # --- Output MQTT ---
 out_host, out_port = parse_broker(OUTPUT_BROKER)
@@ -178,13 +169,6 @@ def on_message(client, userdata, msg):
         if packet is None:
             return
 
-        if isinstance(packet.payload, dict):
-            decoded = packet.payload.get('decoded')
-        else:
-            decoded = getattr(packet.payload, 'decoded', None)
-        if decoded is None:
-            return
-
         path = list(getattr(packet, 'path', None) or [])
         hops = len(path)
         path_hash_bytes = len(path[0]) // 2 if path else None
@@ -207,6 +191,11 @@ def on_message(client, userdata, msg):
             'rssi':              data.get('RSSI'),
             'score':             data.get('score'),
         }
+
+        if isinstance(packet.payload, dict):
+            decoded = packet.payload.get('decoded')
+        else:
+            decoded = getattr(packet.payload, 'decoded', None)
 
         # Advert
         if payload_type == PayloadType.Advert:
@@ -231,7 +220,6 @@ def on_message(client, userdata, msg):
                 role_name = device_role.name if hasattr(device_role, 'name') else str(device_role)
                 out['deviceRole'] = role_value
                 out['deviceRoleName'] = role_name
-            out['decoded'] = decoded_to_dict(decoded)
             publish('advert', out)
             return
 
@@ -250,6 +238,7 @@ def on_message(client, userdata, msg):
             out.update({
                 'channel':         channel,
                 'channelHash':     channel_hash,
+                'decrypted':       decrypted is not None,
                 'sentUnix':        sent_unix,
                 'propagationSecs': propagation,
             })
@@ -257,12 +246,11 @@ def on_message(client, userdata, msg):
                 out['sender'] = sender
             if message is not None:
                 out['message'] = message
-            out['decoded'] = decoded_to_dict(decoded)
             publish('group_text', out)
             return
 
         # Everything else
-        publish(type_name, dict(common, decoded=decoded_to_dict(decoded)))
+        publish(type_name, common)
 
     except Exception as e:
         log.error('Decode error: %s', e)
