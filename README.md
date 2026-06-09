@@ -122,3 +122,7 @@ Additional fields by type:
 **`meshcore/advert`** — `publicKey`, `signatureValid`, `name`, `lat`, `lon`, `deviceRole`, `deviceRoleName`
 
 **`meshcore/group_text`** — `channel`, `channelHash`, `sentUnix`, `propagationSecs`, `sender`, `message`
+
+## responder
+
+This was a project to make a simple responder bot, which would also use AI to generate a short conversational response under certain circumstances. It works, but uses a flawed method of extracting the messages from a Companion over serial. Quickly, with a Heltec v3, or eventually with a v4, the connection fails and crashes the receiver.
