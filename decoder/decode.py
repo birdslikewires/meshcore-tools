@@ -143,21 +143,21 @@ def decoded_to_dict(obj):
 
 # --- Output MQTT ---
 out_host, out_port = parse_broker(OUTPUT_BROKER)
-output_client = mqtt.Client(client_id='meshcore-decoder-out')
+output_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id='meshcore-decoder-out')
 if OUTPUT_USER:
     output_client.username_pw_set(OUTPUT_USER, OUTPUT_PASS)
 
 
-def on_output_connect(client, userdata, flags, rc):
-    if rc == 0:
-        log.info('Output connected: %s', OUTPUT_BROKER)
+def on_output_connect(client, userdata, connect_flags, reason_code, properties):
+    if reason_code.is_failure:
+        log.error('Output connection failed: %s', reason_code)
     else:
-        log.error('Output connection failed: rc=%d', rc)
+        log.info('Output connected: %s', OUTPUT_BROKER)
 
 
-def on_output_disconnect(client, userdata, rc):
-    if rc != 0:
-        log.warning('Output disconnected unexpectedly: rc=%d', rc)
+def on_output_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    if reason_code.is_failure:
+        log.warning('Output disconnected unexpectedly: %s', reason_code)
 
 
 output_client.on_connect = on_output_connect
@@ -198,7 +198,11 @@ def on_message(client, userdata, msg):
         path_hash_bytes = len(path[0]) // 2 if path else None
         received_unix = to_unix(data.get('timestamp'))
 
+        payload_type = getattr(packet, 'payload_type', None)
+        type_name = PAYLOAD_TYPE_NAMES.get(payload_type, 'unknown_{}'.format(payload_type))
+
         common = {
+            'type':              type_name,
             'receivedTimestamp': data.get('timestamp'),
             'receivedUnix':      received_unix,
             'date':              data.get('date'),
@@ -211,9 +215,6 @@ def on_message(client, userdata, msg):
             'rssi':              data.get('RSSI'),
             'score':             data.get('score'),
         }
-
-        payload_type = getattr(packet, 'payload_type', None)
-        type_name = PAYLOAD_TYPE_NAMES.get(payload_type, 'unknown_{}'.format(payload_type))
 
         # Advert
         if payload_type == PayloadType.Advert:
@@ -275,23 +276,23 @@ def on_message(client, userdata, msg):
 
 # --- Input MQTT ---
 in_host, in_port = parse_broker(INPUT_BROKER)
-input_client = mqtt.Client(client_id='meshcore-decoder-in')
+input_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id='meshcore-decoder-in')
 if INPUT_USER:
     input_client.username_pw_set(INPUT_USER, INPUT_PASS)
 
 
-def on_input_connect(client, userdata, flags, rc):
-    if rc == 0:
+def on_input_connect(client, userdata, connect_flags, reason_code, properties):
+    if reason_code.is_failure:
+        log.error('Input connection failed: %s', reason_code)
+    else:
         log.info('Input connected: %s', INPUT_BROKER)
         client.subscribe('meshcore/#')
         log.info('Subscribed to meshcore/#')
-    else:
-        log.error('Input connection failed: rc=%d', rc)
 
 
-def on_input_disconnect(client, userdata, rc):
-    if rc != 0:
-        log.warning('Input disconnected unexpectedly: rc=%d', rc)
+def on_input_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    if reason_code.is_failure:
+        log.warning('Input disconnected unexpectedly: %s', reason_code)
 
 
 input_client.on_connect = on_input_connect

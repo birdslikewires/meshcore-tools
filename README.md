@@ -105,6 +105,7 @@ All messages share a common set of fields:
 
 | Field | Description |
 |---|---|
+| `type` | Packet type name (e.g. `advert`, `message`, `ack`) |
 | `receivedTimestamp` | ISO timestamp from the gateway |
 | `receivedUnix` | Unix timestamp (seconds) |
 | `date`, `time` | Date and time strings from the gateway |
