@@ -16,7 +16,7 @@ from meshcoredecoder.types.crypto import DecryptionOptions
 from meshcoredecoder.types.enums import PayloadType
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     handlers=[logging.StreamHandler()]
 )
@@ -229,6 +229,7 @@ def on_message(client, userdata, msg):
 
         # Group text
         if payload_type == PayloadType.GroupText:
+            log.debug('GroupText decoded: %s', vars(decoded) if decoded else None)
             channel_hash = getattr(decoded, 'channel_hash', None)
             if channel_hash:
                 channel_hash = channel_hash.upper()
